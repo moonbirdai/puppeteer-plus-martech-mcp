@@ -1,0 +1,45 @@
+{
+  "name": "@modelcontextprotocol/server-puppeteer-plus",
+  "version": "1.0.0",
+  "description": "Enhanced Puppeteer MCP server with digital marketing analytics capabilities",
+  "license": "MIT",
+  "author": "Your Name",
+  "homepage": "https://modelcontextprotocol.io",
+  "bugs": "https://github.com/yourusername/puppeteer-plus/issues",
+  "type": "module",
+  "bin": {
+    "mcp-server-puppeteer-plus": "index.js"
+  },
+  "files": [
+    "index.js",
+    "src/**/*.js"
+  ],
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test-local.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "mcp",
+    "puppeteer",
+    "analytics",
+    "seo",
+    "marketing",
+    "pixels"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.1",
+    "puppeteer": "^22.15.0",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "jest": "^29.6.4",
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
