@@ -14,14 +14,23 @@ export function registerSeoTools(server, initBrowser) {
     },
     async ({ url }) => {
       try {
-        // Initialize browser
-        const browser = await initBrowser();
+        // Initialize browser with optimization options
+        const browser = await initBrowser({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage'
+          ]
+        });
         
         // Create a new page
         const page = await browser.newPage();
         
-        // Navigate to the URL
-        await page.goto(url, { waitUntil: "networkidle2" });
+        // Navigate to the URL with extended timeout
+        await page.goto(url, { 
+          waitUntil: 'domcontentloaded', 
+          timeout: 60000 // 60 second timeout
+        });
         
         // Analyze SEO metadata
         const seoMetadata = await analyzeSeoMetadata(page);
@@ -66,14 +75,23 @@ export function registerSeoTools(server, initBrowser) {
     },
     async ({ url }) => {
       try {
-        // Initialize browser
-        const browser = await initBrowser();
+        // Initialize browser with optimization options
+        const browser = await initBrowser({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage'
+          ]
+        });
         
         // Create a new page
         const page = await browser.newPage();
         
-        // Navigate to the URL
-        await page.goto(url, { waitUntil: "networkidle2" });
+        // Navigate to the URL with extended timeout
+        await page.goto(url, { 
+          waitUntil: 'domcontentloaded', 
+          timeout: 60000 // 60 second timeout
+        });
         
         // Analyze SEO metadata
         const seoMetadata = await analyzeSeoMetadata(page);
@@ -147,14 +165,23 @@ export function registerSeoTools(server, initBrowser) {
     },
     async ({ url }) => {
       try {
-        // Initialize browser
-        const browser = await initBrowser();
+        // Initialize browser with optimization options
+        const browser = await initBrowser({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage'
+          ]
+        });
         
         // Create a new page
         const page = await browser.newPage();
         
-        // Navigate to the URL
-        await page.goto(url, { waitUntil: "networkidle2" });
+        // Navigate to the URL with extended timeout
+        await page.goto(url, { 
+          waitUntil: 'domcontentloaded', 
+          timeout: 60000 // 60 second timeout
+        });
         
         // Analyze SEO metadata (for headings)
         const seoMetadata = await analyzeSeoMetadata(page);
@@ -276,14 +303,23 @@ export function registerSeoTools(server, initBrowser) {
     },
     async ({ url }) => {
       try {
-        // Initialize browser
-        const browser = await initBrowser();
+        // Initialize browser with optimization options
+        const browser = await initBrowser({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage'
+          ]
+        });
         
         // Create a new page
         const page = await browser.newPage();
         
-        // Navigate to the URL
-        await page.goto(url, { waitUntil: "networkidle2" });
+        // Navigate to the URL with extended timeout
+        await page.goto(url, { 
+          waitUntil: 'domcontentloaded', 
+          timeout: 60000 // 60 second timeout
+        });
         
         // Analyze SEO metadata (to extract structured data)
         const seoMetadata = await analyzeSeoMetadata(page);

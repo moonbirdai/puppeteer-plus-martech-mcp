@@ -27,18 +27,28 @@ const server = new McpServer({
 // Shared browser instance
 let browser;
 
-// Initialize the browser
+// Initialize the browser with improved timeout and error handling
 async function initBrowser(options = {}) {
-  if (!browser || !browser.connected) {
-    const defaultOptions = {
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    };
+  try {
+    if (!browser || !browser.connected) {
+      console.error("Launching browser...");
+      const defaultOptions = {
+        headless: "new",
+        args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+        timeout: 60000 // 60 second timeout for browser launch
+      };
+      
+      browser = await puppeteer.launch(Object.assign({}, defaultOptions, options || {}));
+      console.error("Browser launched successfully");
+    } else {
+      console.error("Reusing existing browser instance");
+    }
     
-    browser = await puppeteer.launch(Object.assign({}, defaultOptions, options || {}));
+    return browser;
+  } catch (error) {
+    console.error(`Error initializing browser: ${error.message}`);
+    throw error;
   }
-  
-  return browser;
 }
 
 // Helper to cleanup browser on shutdown

@@ -1,40 +1,112 @@
 /**
  * Utility for intercepting and analyzing network requests
+ * Updated version with improved handling for request interception conflicts
  */
 
+// Symbol to track if a page has been set up for interception
+const INTERCEPTION_SETUP = Symbol('request-interception-setup');
+
 /**
- * Sets up request interception on a Puppeteer page
+ * Sets up request interception on a Puppeteer page with conflict prevention
  * @param {Page} page - Puppeteer page object
+ * @param {Object} options - Interception options
  * @returns {Promise<Array>} Array to collect requests
  */
-async function setupRequestInterception(page) {
+async function setupRequestInterception(page, options = {}) {
   const requests = [];
+  const blockResources = options.blockResources || [];
   
-  await page.setRequestInterception(true);
+  // Check if this page already has interception set up
+  if (page[INTERCEPTION_SETUP]) {
+    // If already set up, just return the existing requests array to avoid conflicts
+    console.error('Request interception already set up for this page, reusing existing configuration');
+    return requests;
+  }
   
-  page.on('request', request => {
-    requests.push({
-      url: request.url(),
-      method: request.method(),
-      resourceType: request.resourceType(),
-      headers: request.headers(),
-      time: Date.now()
+  try {
+    // Remove any existing request listeners to prevent conflicts
+    // Note: This uses a private Puppeteer API that might change in future versions
+    const listeners = page['_events']?.request || [];
+    if (Array.isArray(listeners) && listeners.length > 0) {
+      console.error(`Removing ${listeners.length} existing request listeners to prevent conflicts`);
+      page.removeAllListeners('request');
+    }
+    
+    // Enable request interception
+    await page.setRequestInterception(true);
+    
+    // Mark this page as having interception set up
+    page[INTERCEPTION_SETUP] = true;
+    
+    // Create a single request handler that will be used for all requests
+    const requestHandler = (request) => {
+      try {
+        // Skip blocked resource types for faster loading
+        if (blockResources.includes(request.resourceType())) {
+          request.abort().catch(e => {
+            // Suppress abort errors - they're usually because the request was already handled
+          });
+          return;
+        }
+        
+        // Store request data for analysis
+        requests.push({
+          url: request.url(),
+          method: request.method(),
+          resourceType: request.resourceType(),
+          headers: request.headers(),
+          time: Date.now()
+        });
+        
+        // Continue the request if not already handled
+        if (!request.response() && !request.redirectChain().length) {
+          request.continue().catch(e => {
+            // Suppress continue errors - they're usually because the request was already handled
+          });
+        }
+      } catch (error) {
+        // If any error happens, try to continue the request as a fallback
+        // but don't log all the individual errors to reduce console noise
+        try {
+          request.continue().catch(() => {
+            // Suppress errors
+          });
+        } catch (innerError) {
+          // Suppress errors
+        }
+      }
+    };
+    
+    // Add the page handler
+    page.on('request', requestHandler);
+    
+    // Clean up handler when page is closed
+    page.once('close', () => {
+      page.removeListener('request', requestHandler);
+      delete page[INTERCEPTION_SETUP];
     });
     
-    request.continue();
-  });
-  
-  page.on('response', response => {
-    const request = requests.find(req => req.url === response.url());
-    if (request) {
-      request.status = response.status();
-      request.responseHeaders = response.headers();
-      request.responseTime = Date.now();
-      request.timing = request.responseTime - request.time;
-    }
-  });
-  
-  return requests;
+    // Add response handler to capture response data
+    page.on('response', response => {
+      try {
+        const request = requests.find(req => req.url === response.url());
+        if (request) {
+          request.status = response.status();
+          request.responseHeaders = response.headers();
+          request.responseTime = Date.now();
+          request.timing = request.responseTime - request.time;
+        }
+      } catch (error) {
+        // Suppress errors in response handling
+      }
+    });
+    
+    return requests;
+  } catch (error) {
+    console.error(`Error setting up request interception: ${error.message}`);
+    // Continue without interception rather than failing
+    return requests;
+  }
 }
 
 /**

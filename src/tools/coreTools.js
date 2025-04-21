@@ -22,8 +22,11 @@ export function registerCoreTools(server, initBrowser) {
         // Create a new page if needed
         const page = (await browser.pages())[0] || await browser.newPage();
         
-        // Navigate to the URL
-        await page.goto(url, { waitUntil: "networkidle2" });
+        // Navigate to the URL with extended timeout
+        await page.goto(url, { 
+          waitUntil: "domcontentloaded", 
+          timeout: 60000 // 60 second timeout
+        });
         
         return {
           content: [{

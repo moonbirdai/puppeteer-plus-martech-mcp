@@ -1,58 +1,81 @@
 #!/usr/bin/env node
 
 /**
- * Simple test script to verify MCP server functionality
- * This script tests all the available tools in the MCP server
+ * Enhanced test script for Puppeteer Plus MCP Server
+ * Tests tools with better error handling and timeout management
  */
 
 import { spawn } from 'child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
-// Test website to analyze
-const TEST_URL = 'https://www.nytimes.com';
+// Test website to analyze - use a site with marketing technologies
+const TEST_URL = 'https://blog.hubspot.com/';
 
-// Function to test a specific tool
-async function testTool(client, toolName, params) {
+// More robust test function with timeout
+async function testTool(client, toolName, params, timeoutMs = 120000) {
   console.log(`\n=== Testing tool: ${toolName} ===`);
+  
   try {
-    const result = await client.callTool({
+    // Create a promise that rejects after the timeout
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`Test timed out after ${timeoutMs}ms`)), timeoutMs);
+    });
+    
+    // Create the actual tool call promise
+    const toolCallPromise = client.callTool({
       name: toolName,
       arguments: params
     });
     
-    // For image content, just indicate success
+    // Race the promises
+    const result = await Promise.race([toolCallPromise, timeoutPromise]);
+    
+    // Handle result based on content type
     if (result.content && result.content.some(item => item.type === 'image')) {
       console.log(`✅ Success: Received image content`);
+      return true;
     } else {
       // For text content, log a snippet
       const textContent = result.content.find(item => item.type === 'text')?.text;
       console.log(`✅ Success: ${textContent ? textContent.substring(0, 100) + '...' : 'No text content'}`);
+      return true;
     }
-    return true;
   } catch (error) {
-    console.error(`❌ Error testing ${toolName}:`, error);
+    console.error(`❌ Error testing ${toolName}:`, error.message);
     return false;
   }
 }
 
 async function main() {
-  // Start the server process
-  const server = spawn('node', ['index.js']);
+  let server;
   let client;
   
-  // Handle server process events
-  server.stderr.on('data', (data) => {
-    console.log(`Server log: ${data}`);
-  });
-  
-  server.on('error', (error) => {
-    console.error(`Server process error: ${error.message}`);
-    process.exit(1);
-  });
-  
   try {
-    // Create MCP client with longer timeout
+    // Start the server process with environment variables for debugging
+    server = spawn('node', ['index.js'], {
+      env: {
+        ...process.env,
+        PUPPETEER_HEADLESS: 'new',
+        DEBUG: 'puppeteer:*'
+      }
+    });
+    
+    // Handle server output for better debugging
+    server.stdout.on('data', (data) => {
+      console.log(`Server stdout: ${data}`);
+    });
+    
+    server.stderr.on('data', (data) => {
+      console.log(`Server log: ${data}`);
+    });
+    
+    server.on('error', (error) => {
+      console.error(`Server process error: ${error.message}`);
+      process.exit(1);
+    });
+    
+    // Create MCP client
     const transport = new StdioClientTransport({
       command: 'node',
       args: ['index.js']
@@ -67,9 +90,9 @@ async function main() {
     console.log("Connecting to server...");
     client.connect(transport);
     
-    // Wait a bit for the server to initialize
+    // Wait for server initialization
     console.log("Waiting for server initialization...");
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
     // List available tools
     console.log("Listing available tools...");
@@ -83,25 +106,146 @@ async function main() {
       process.exit(1);
     }
     
-    // Test a subset of tools to avoid timeouts
-    const toolsToTest = [
-      { name: 'puppeteer_navigate', params: { url: TEST_URL } },
-      { name: 'analyze-general-marketing-tech', params: { url: TEST_URL, waitTime: 1000 } },
-      { name: 'analyze-seo-metadata', params: { url: TEST_URL } }
+    // Define smaller subset of tools to test first
+    const essentialToolsToTest = [
+      // Core Navigation & Screenshot Tools
+      { 
+        name: 'puppeteer_navigate', 
+        params: { 
+          url: TEST_URL 
+        }
+      },
+      {
+        name: 'puppeteer_screenshot',
+        params: {
+          name: 'test-screenshot',
+          width: 800,
+          height: 600
+        }
+      },
+      // General marketing tech
+      {
+        name: 'analyze-general-marketing-tech',
+        params: {
+          url: TEST_URL,
+          waitTime: 2000
+        }
+      },
+      // SEO analysis
+      {
+        name: 'analyze-seo-metadata',
+        params: {
+          url: TEST_URL
+        }
+      },
     ];
     
-    for (const tool of toolsToTest) {
+    // Define all tools to test with their parameters
+    const allToolsToTest = [
+      ...essentialToolsToTest,
+      // Additional marketing tools
+      {
+        name: 'analyze-analytics-tools',
+        params: {
+          url: TEST_URL,
+          waitTime: 2000
+        }
+      },
+      {
+        name: 'analyze-advertising-pixels',
+        params: {
+          url: TEST_URL,
+          waitTime: 2000
+        }
+      },
+      {
+        name: 'analyze-tag-managers',
+        params: {
+          url: TEST_URL,
+          waitTime: 2000
+        }
+      },
+      {
+        name: 'analyze-network-requests',
+        params: {
+          url: TEST_URL,
+          waitTime: 2000,
+          maxRequests: 5
+        }
+      },
+      {
+        name: 'create-marketing-tech-screenshot',
+        params: {
+          url: TEST_URL,
+          highlightPixels: true
+        }
+      },
+      // Additional SEO tools
+      {
+        name: 'analyze-seo',
+        params: {
+          url: TEST_URL
+        }
+      },
+      {
+        name: 'analyze-seo-structure',
+        params: {
+          url: TEST_URL
+        }
+      },
+      {
+        name: 'analyze-structured-data',
+        params: {
+          url: TEST_URL
+        }
+      }
+    ];
+    
+    // Test essential tools first
+    console.log("\n=== Testing Essential Tools ===");
+    let essentialSuccessCount = 0;
+    
+    for (const tool of essentialToolsToTest) {
       const success = await testTool(client, tool.name, tool.params);
       
-      // Add a pause between tests
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (!success) {
-        console.log(`Continuing despite error in ${tool.name}...`);
+      if (success) {
+        essentialSuccessCount++;
       }
+      
+      // Add a pause between tests to allow cleanup
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
     
-    console.log("\n✅ Test completed!");
+    console.log(`\n✅ Essential tools test completed! ${essentialSuccessCount}/${essentialToolsToTest.length} essential tools tested successfully`);
+    
+    // Prompt user to continue with all tools
+    if (essentialSuccessCount === essentialToolsToTest.length) {
+      console.log("\nAll essential tools passed! Do you want to test all tools? (y/n)");
+      const answer = await new Promise(resolve => {
+        process.stdin.once('data', data => {
+          resolve(data.toString().trim().toLowerCase());
+        });
+      });
+      
+      if (answer === 'y') {
+        console.log("\n=== Testing All Tools ===");
+        let totalSuccessCount = essentialSuccessCount;
+        const remainingTools = allToolsToTest.slice(essentialToolsToTest.length);
+        
+        for (const tool of remainingTools) {
+          const success = await testTool(client, tool.name, tool.params);
+          
+          if (success) {
+            totalSuccessCount++;
+          }
+          
+          // Add a pause between tests to allow cleanup
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+        
+        console.log(`\n✅ Full test completed! ${totalSuccessCount}/${allToolsToTest.length} tools tested successfully`);
+      }
+    }
   } catch (error) {
     console.error("❌ Error during testing:", error);
   } finally {
@@ -115,10 +259,13 @@ async function main() {
       }
     }
     
-    server.kill();
+    if (server) {
+      server.kill();
+    }
     
     // Give it a moment to clean up
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    console.log("Test complete. Exiting.");
   }
 }
 

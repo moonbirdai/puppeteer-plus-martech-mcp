@@ -17,8 +17,15 @@ export function registerMarketingTools(server, initBrowser) {
     },
     async ({ url, waitTime }) => {
       try {
-        // Initialize browser
-        const browser = await initBrowser();
+        // Initialize browser with optimization options
+        const browser = await initBrowser({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas'
+          ]
+        });
         
         // Create a new page
         const page = await browser.newPage();
@@ -26,11 +33,21 @@ export function registerMarketingTools(server, initBrowser) {
         // Set a desktop viewport
         await page.setViewport({ width: 1280, height: 800 });
         
-        // Perform the analysis
-        const analysisResult = await analyzer.analyzeMarketingTech(page, url, {
+        // Configure performance options
+        await page.setCacheEnabled(true); // Enable caching
+        
+        // Use lightweight mode for faster analysis
+        const analysisOptions = {
           additionalWait: waitTime || 2000,
-          includeAllRequests: false
-        });
+          includeAllRequests: false,
+          waitUntil: 'domcontentloaded',  // Less strict than networkidle2
+          timeout: 60000, // 60 second timeout
+          blockResources: ['image', 'font', 'media'] // Block heavy resources
+        };
+        
+        // Perform the analysis with optimized settings
+        console.error(`Starting analysis of ${url}`);
+        const analysisResult = await analyzer.analyzeMarketingTech(page, url, analysisOptions);
         
         // Close the page
         await page.close();
@@ -73,8 +90,15 @@ export function registerMarketingTools(server, initBrowser) {
     },
     async ({ url, waitTime }) => {
       try {
-        // Initialize browser
-        const browser = await initBrowser();
+        // Initialize browser with optimization options
+        const browser = await initBrowser({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas'
+          ]
+        });
         
         // Create a new page
         const page = await browser.newPage();
@@ -82,11 +106,16 @@ export function registerMarketingTools(server, initBrowser) {
         // Set a desktop viewport
         await page.setViewport({ width: 1280, height: 800 });
         
-        // Setup request interception
-        const requests = await setupRequestInterception(page);
+        // Use the improved request interception utility
+        const requests = await setupRequestInterception(page, {
+          blockResources: ['image', 'font', 'media'] // Block heavy resources
+        });
         
-        // Navigate to URL
-        await page.goto(url, { waitUntil: 'networkidle2' });
+        // Navigate to URL with extended timeout
+        await page.goto(url, { 
+          waitUntil: 'domcontentloaded', 
+          timeout: 60000 // 60 second timeout
+        });
         
         // Additional wait time for delayed pixel fires
         if (waitTime) {
@@ -171,8 +200,15 @@ export function registerMarketingTools(server, initBrowser) {
     },
     async ({ url, waitTime }) => {
       try {
-        // Initialize browser
-        const browser = await initBrowser();
+        // Initialize browser with optimization options
+        const browser = await initBrowser({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas'
+          ]
+        });
         
         // Create a new page
         const page = await browser.newPage();
@@ -180,11 +216,16 @@ export function registerMarketingTools(server, initBrowser) {
         // Set a desktop viewport
         await page.setViewport({ width: 1280, height: 800 });
         
-        // Setup request interception
-        const requests = await setupRequestInterception(page);
+        // Use the improved request interception utility
+        const requests = await setupRequestInterception(page, {
+          blockResources: ['image', 'font'] // Block less essential resources
+        });
         
-        // Navigate to URL
-        await page.goto(url, { waitUntil: 'networkidle2' });
+        // Navigate to URL with extended timeout
+        await page.goto(url, { 
+          waitUntil: 'domcontentloaded', 
+          timeout: 60000 // 60 second timeout
+        });
         
         // Additional wait time for delayed pixel fires
         if (waitTime) {
@@ -269,8 +310,15 @@ export function registerMarketingTools(server, initBrowser) {
     },
     async ({ url, waitTime }) => {
       try {
-        // Initialize browser
-        const browser = await initBrowser();
+        // Initialize browser with optimization options
+        const browser = await initBrowser({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas'
+          ]
+        });
         
         // Create a new page
         const page = await browser.newPage();
@@ -278,8 +326,16 @@ export function registerMarketingTools(server, initBrowser) {
         // Set a desktop viewport
         await page.setViewport({ width: 1280, height: 800 });
         
-        // Navigate to URL
-        await page.goto(url, { waitUntil: 'networkidle2' });
+        // Use the improved request interception utility
+        await setupRequestInterception(page, {
+          blockResources: ['image', 'font', 'media'] // Block heavy resources
+        });
+        
+        // Navigate to URL with extended timeout
+        await page.goto(url, { 
+          waitUntil: 'domcontentloaded', 
+          timeout: 60000 // 60 second timeout
+        });
         
         // Additional wait time
         if (waitTime) {
@@ -374,8 +430,14 @@ export function registerMarketingTools(server, initBrowser) {
         // Set a desktop viewport
         await page.setViewport({ width: 1280, height: 800 });
         
-        // Setup request interception
-        const requests = await setupRequestInterception(page);
+        // Setup request interception with error handling
+        let requests = [];
+    try {
+      requests = await setupRequestInterception(page);
+    } catch (error) {
+      console.error(`Error setting up request interception: ${error.message}`);
+      // Continue with empty requests array rather than failing
+    }
         
         // Navigate to URL
         await page.goto(url, { waitUntil: 'networkidle2' });
@@ -454,8 +516,16 @@ export function registerMarketingTools(server, initBrowser) {
     },
     async ({ url, highlightPixels = true }) => {
       try {
-        // Initialize browser
-        const browser = await initBrowser();
+        // Initialize browser with optimization options
+        const browser = await initBrowser({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--disable-gpu'
+          ]
+        });
         
         // Create a new page
         const page = await browser.newPage();
@@ -463,8 +533,19 @@ export function registerMarketingTools(server, initBrowser) {
         // Set a desktop viewport
         await page.setViewport({ width: 1280, height: 800 });
         
-        // Navigate to the URL
-        await page.goto(url, { waitUntil: "networkidle2" });
+        // Use the improved request interception utility
+        await setupRequestInterception(page, {
+          blockResources: ['image', 'font', 'media'] // Block heavy resources
+        });
+        
+        // Navigate to the URL with extended timeout
+        await page.goto(url, { 
+          waitUntil: 'domcontentloaded', 
+          timeout: 60000 // 60 second timeout
+        });
+        
+        // Additional wait for scripts to execute
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         // If highlighting pixels, inject markers
         if (highlightPixels) {
