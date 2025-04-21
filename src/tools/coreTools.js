@@ -94,7 +94,7 @@ export function registerCoreTools(server, initBrowser) {
             },
             {
               type: "image",
-              format: "png",
+              mimeType: "image/png",
               data: screenshot
             }
           ]

@@ -90,7 +90,7 @@ export function registerMarketingTools(server, initBrowser) {
         
         // Additional wait time for delayed pixel fires
         if (waitTime) {
-          await page.waitForTimeout(waitTime);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
         
         // Detect marketing pixels with focus on analytics
@@ -188,7 +188,7 @@ export function registerMarketingTools(server, initBrowser) {
         
         // Additional wait time for delayed pixel fires
         if (waitTime) {
-          await page.waitForTimeout(waitTime);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
         
         // Detect marketing pixels with focus on advertising
@@ -283,7 +283,7 @@ export function registerMarketingTools(server, initBrowser) {
         
         // Additional wait time
         if (waitTime) {
-          await page.waitForTimeout(waitTime);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
         
         // Detect marketing pixels with focus on tag managers
@@ -382,7 +382,7 @@ export function registerMarketingTools(server, initBrowser) {
         
         // Additional wait time for delayed pixel fires
         if (waitTime) {
-          await page.waitForTimeout(waitTime);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
         
         // Filter marketing-related requests
@@ -551,7 +551,7 @@ export function registerMarketingTools(server, initBrowser) {
         return {
           content: [{
             type: "image",
-            format: "png",
+            mimeType: "image/png",
             data: screenshot
           }]
         };

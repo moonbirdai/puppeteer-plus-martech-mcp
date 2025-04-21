@@ -25,7 +25,7 @@ async function analyzeMarketingTech(page, url, options = {}) {
   
   // Additional wait time to capture delayed pixel fires
   if (options.additionalWait) {
-    await page.waitForTimeout(options.additionalWait);
+    await new Promise(resolve => setTimeout(resolve, options.additionalWait));
   }
   
   // Detect marketing pixels and tags
