@@ -45,7 +45,8 @@ async function main() {
   
   // Create MCP client
   const transport = new StdioClientTransport({
-    process: server
+    command: 'node',
+    args: ['index.js']
   });
   
   const client = new Client({
@@ -58,7 +59,7 @@ async function main() {
     client.connect(transport);
     
     // Wait a bit for the server to initialize
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     // List available tools
     console.log("Listing available tools...");
@@ -100,7 +101,11 @@ async function main() {
     console.error("❌ Error during testing:", error.message);
   } finally {
     // Cleanup
-    client.close();
+    try {
+      await client.close();
+    } catch (e) {
+      console.error("Error closing client:", e);
+    }
     server.kill();
   }
 }
