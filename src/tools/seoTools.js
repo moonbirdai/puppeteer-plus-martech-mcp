@@ -7,7 +7,7 @@ import { analyzeSeoMetadata, analyzeUrl } from '../seo/metadataAnalyzer.js';
 export function registerSeoTools(server, initBrowser) {
   // 1. Comprehensive SEO analysis
   server.tool(
-    "analyze-seo",
+    "audit-seo",
     "Analyze SEO metadata and structure on a webpage",
     {
       url: z.string().url().describe("The URL of the webpage to analyze")
@@ -68,7 +68,7 @@ export function registerSeoTools(server, initBrowser) {
 
   // 2. SEO metadata analysis
   server.tool(
-    "analyze-seo-metadata",
+    "check-page-metadata",
     "Analyze meta tags, titles, and descriptions on a webpage",
     {
       url: z.string().url().describe("The URL of the webpage to analyze")
@@ -158,7 +158,7 @@ export function registerSeoTools(server, initBrowser) {
 
   // 3. SEO structure analysis
   server.tool(
-    "analyze-seo-structure",
+    "evaluate-page-structure",
     "Analyze URL structure, headings hierarchy, and page organization",
     {
       url: z.string().url().describe("The URL of the webpage to analyze")
@@ -296,7 +296,7 @@ export function registerSeoTools(server, initBrowser) {
 
   // 4. Structured data analysis
   server.tool(
-    "analyze-structured-data",
+    "extract-schema-markup",
     "Analyze JSON-LD, microdata, and schema.org markup on a webpage",
     {
       url: z.string().url().describe("The URL of the webpage to analyze")

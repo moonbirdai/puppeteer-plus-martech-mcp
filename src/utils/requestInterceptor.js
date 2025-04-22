@@ -116,32 +116,65 @@ async function setupRequestInterception(page, options = {}) {
  */
 function filterMarketingRequests(requests) {
   const marketingDomains = [
+    // Google
     'google-analytics.com',
     'googletagmanager.com',
     'doubleclick.net',
+    'googlesyndication.com',
+    
+    // Facebook/Meta
     'facebook.com/tr',
     'connect.facebook.net',
+    'fbcdn.net',
+    
+    // TikTok
     'analytics.tiktok.com',
-    'clarity.ms',
-    'bing.com/uet',
+    'tiktokcdn.com',
+    
+    // Twitter/X
+    'platform.twitter.com',
     't.co/i/adsct',
     'ads-twitter.com',
     'analytics.twitter.com',
-    'platform.linkedin.com',
+    
+    // Adobe (expanded)
+    'demdex.net',
+    'omtrdc.net',
+    'adobedtm.com',
+    'adobe.com',
+    '2o7.net',
+    'adobedc.net',
+    'everesttech.net',
+    'adobe.io',
+    'scene7.com',
+    'marketo.net',
+    'typekit.net',
+    
+    // Microsoft
+    'clarity.ms',
+    'bing.com',
+    'microsoftonline.com',
+    
+    // Pinterest
     'pinterest.com/ct',
+    'pinimg.com',
+    
+    // LinkedIn
+    'platform.linkedin.com',
+    'linkedin.com/px',
+    'licdn.com',
+    'snap.licdn.com',
+    'px.ads.linkedin.com',
+    
+    // Other Analytics/Marketing
     'sc-static.net',
     'contentsquare.net',
     'hotjar.com',
     'clicktale.net',
-    'demdex.net',
-    'omtrdc.net',
-    'adobedtm.com',
     'segment.io',
     'segment.com',
     'cdn.evgnet.com',  // Salesforce Marketing Cloud
     'js.hs-scripts.com', // HubSpot
-    'snap.licdn.com', // LinkedIn
-    'px.ads.linkedin.com', // LinkedIn
     'bat.bing.com', // Microsoft Advertising
     'analytics.amplitude.com', // Amplitude
     'googleoptimize.com',
@@ -152,10 +185,19 @@ function filterMarketingRequests(requests) {
     'static.ads-twitter.com', // Twitter Ads
     'cdn.mouseflow.com', // Mouseflow
     'app.link', // Branch.io
-    'c.lytics.io' // Lytics
+    'c.lytics.io', // Lytics
+    'cxense.com', // Piano
+    'chartbeat.com', // Chartbeat
+    'crazyegg.com', // Crazy Egg
+    'krxd.net', // Salesforce Krux
+    'quantserve.com', // Quantcast
+    'cdn.taboola.com', // Taboola
+    'cdn.speedcurve.com', // SpeedCurve
+    'assets.adobedtm.com' // Adobe DTM
   ];
   
   const marketingPaths = [
+    // General analytics paths
     '/collect',
     '/analytics',
     '/pixel',
@@ -168,7 +210,29 @@ function filterMarketingRequests(requests) {
     '/matomo.php',
     '/ping',
     '/pageview',
-    '/event'
+    '/event',
+    
+    // Adobe specific paths
+    '/b/ss/', // Adobe Analytics collection server
+    '/id', // Adobe ECID service
+    '/mbox', // Adobe Target
+    '/demconf.jpg', // Adobe Audience Manager
+    '/dest', // Adobe destination publishing
+    '/js/launch', // Experience Platform Launch
+    '/AppMeasurement', // Adobe Analytics library
+    '/at.js', // Adobe Target library
+    '/satelliteLib', // Adobe Launch/DTM
+    '/dpm', // Adobe data provider match
+    
+    // Additional tracking patterns
+    '/tracking',
+    '/telemetry',
+    '/rum', // Real user monitoring
+    '/p.gif', // Common tracking pixel pattern
+    '/1.gif', // Common tracking pixel pattern
+    '/t.gif', // Common tracking pixel pattern
+    '/c.gif', // Common tracking pixel pattern
+    '/i.gif' // Common tracking pixel pattern
   ];
   
   return requests.filter(request => {

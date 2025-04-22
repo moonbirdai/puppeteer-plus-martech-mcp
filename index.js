@@ -11,6 +11,9 @@ import { registerCoreTools } from "./src/tools/coreTools.js";
 // Import marketing analysis tools
 import { registerMarketingTools } from "./src/tools/marketingTools.js";
 
+// Import enhanced marketing analysis tools (Omnibug-based)
+import { registerMarketingAnalysisTools } from "./src/tools/marketingAnalysisTool.js";
+
 // Import SEO analysis tools
 import { registerSeoTools } from "./src/tools/seoTools.js";
 
@@ -63,6 +66,7 @@ async function cleanup() {
 // Register all tool categories
 registerCoreTools(server, initBrowser);
 registerMarketingTools(server, initBrowser);
+registerMarketingAnalysisTools(server, initBrowser); // Register the new enhanced tools
 registerSeoTools(server, initBrowser);
 
 // Handle process termination

@@ -9,6 +9,7 @@ A Model Context Protocol (MCP) server that extends Puppeteer functionality with 
 - **SEO Metadata Analysis**: Evaluate page metadata, structured data, and SEO best practices
 - **Visual Debugging**: Generate screenshots with marketing technologies highlighted
 - **Granular Analysis Tools**: Specialized tools for specific aspects of digital marketing and SEO
+- **Omnibug Integration**: Enhanced detection capabilities based on the popular Omnibug browser extension
 
 ## Supported Technologies
 
@@ -17,10 +18,17 @@ A Model Context Protocol (MCP) server that extends Puppeteer functionality with 
 - Google Tag Manager
 - Adobe Analytics
 - Adobe Launch/DTM
+- Adobe Experience Platform
+- Adobe Audience Manager
 - Segment
 - Hotjar
 - Mixpanel
 - Amplitude
+- Microsoft Clarity
+- Tealium IQ
+- Matomo/Piwik
+- Ensighten
+- AT Internet
 
 ### Advertising Pixels
 - Facebook Pixel
@@ -30,11 +38,19 @@ A Model Context Protocol (MCP) server that extends Puppeteer functionality with 
 - LinkedIn Insight Tag
 - Twitter/X Pixel
 - Microsoft Advertising
+- Snapchat Pixel
+- Criteo
+- RTB House
+- Reddit Pixel
+- Spotify Pixel
+- Outbrain
 
 ### Marketing Automation
 - HubSpot
 - Marketo
 - Salesforce Marketing Cloud
+- Braze
+- Brevo
 
 ## Tools
 
@@ -63,9 +79,36 @@ Takes a screenshot of the current page or a specific element.
 **Returns:**
 The captured screenshot and a success message.
 
-### Marketing Technology Analysis Tools
+### Enhanced Marketing Technology Analysis Tools
 
-#### analyze-general-marketing-tech
+#### scan-marketing-stack
+Comprehensive detection and analysis of all marketing technologies on a webpage using the enhanced Omnibug-based provider system.
+
+**Parameters:**
+- `url` (string, required): The URL of the webpage to analyze
+- `waitTime` (number, optional): Additional time to wait for delayed pixels to fire (in milliseconds)
+
+**Returns:**
+Complete analysis of all detected marketing technologies, including:
+- Categorized list of all detected technologies (analytics, advertising, tag managers, etc.)
+- Detection method for each technology (global variable, network request)
+- Technology-specific properties (account IDs, container IDs, etc.)
+- Data layer information when available
+- Network request statistics
+
+#### visualize-marketing-tech
+Takes a screenshot with detailed marketing technologies visually highlighted, with improved detection capabilities.
+
+**Parameters:**
+- `url` (string, required): The URL of the webpage to screenshot
+- `highlightMode` (string, optional): How to highlight detected marketing technologies ("basic", "detailed", or "none")
+
+**Returns:**
+A screenshot with marketing technologies visually highlighted and labeled. The "detailed" mode provides more information about each technology directly on the screenshot.
+
+### Original Marketing Technology Analysis Tools
+
+#### find-marketing-technologies
 Provides a high-level overview of all marketing technologies on a webpage.
 
 **Parameters:**
@@ -78,7 +121,7 @@ Summary of all detected marketing technologies, including:
 - Total number of tracking requests
 - Number of marketing-related requests
 
-#### analyze-analytics-tools
+#### analyze-analytics-platforms
 Deep dive into analytics platforms like GA4, Universal Analytics, Adobe Analytics, etc.
 
 **Parameters:**
@@ -92,7 +135,7 @@ Detailed analysis of analytics tools, including:
 - Data layer sample if available
 - Analytics-related network requests
 
-#### analyze-advertising-pixels
+#### detect-ad-pixels
 Focuses on advertising platforms like Facebook, TikTok, etc.
 
 **Parameters:**
@@ -105,7 +148,7 @@ Detailed analysis of advertising pixels, including:
 - Pixel IDs (Facebook, TikTok, etc.)
 - Advertising-related network requests
 
-#### analyze-tag-managers
+#### identify-tag-managers
 Analyzes tag management systems like GTM, Tealium, etc.
 
 **Parameters:**
@@ -119,7 +162,7 @@ Detailed analysis of tag managers, including:
 - Data layer sample and events
 - Configuration insights (when available)
 
-#### analyze-network-requests
+#### track-marketing-beacons
 Detailed analysis of network requests for tracking and marketing activities.
 
 **Parameters:**
@@ -134,7 +177,7 @@ Comprehensive network request analysis, including:
 - Detailed tracking requests for each vendor category
 - Request timing and patterns
 
-#### create-marketing-tech-screenshot
+#### highlight-marketing-tools
 Takes a screenshot with marketing technologies visually highlighted.
 
 **Parameters:**
@@ -146,7 +189,7 @@ A screenshot with marketing technologies visually highlighted. Different types o
 
 ### SEO Analysis Tools
 
-#### analyze-seo
+#### audit-seo
 Complete SEO analysis combining metadata, structure, and URL insights.
 
 **Parameters:**
@@ -160,7 +203,7 @@ Comprehensive SEO analysis, including:
 - Canonical links
 - OpenGraph and Twitter card data
 
-#### analyze-seo-metadata
+#### check-page-metadata
 Focused analysis of meta tags, titles, and descriptions.
 
 **Parameters:**
@@ -174,7 +217,7 @@ Detailed metadata analysis, including:
 - Meta tag evaluations with SEO recommendations
 - Content length and optimization suggestions
 
-#### analyze-seo-structure
+#### evaluate-page-structure
 Analysis of URL structure, headings hierarchy, and page organization.
 
 **Parameters:**
@@ -189,7 +232,7 @@ Structural SEO analysis, including:
 - Navigation elements (breadcrumbs, etc.)
 - Structure evaluations with SEO recommendations
 
-#### analyze-structured-data
+#### extract-schema-markup
 Analysis of JSON-LD, microdata, and schema.org markup.
 
 **Parameters:**
@@ -234,6 +277,17 @@ Add this to your `claude_desktop_config.json`:
 }
 ```
 
+## Technology Details
+
+### Omnibug Integration
+
+This server incorporates enhanced detection capabilities inspired by the [Omnibug](https://github.com/MisterPhilip/omnibug) browser extension. The integration includes:
+
+- Comprehensive provider framework for detecting specific marketing technologies
+- URL pattern matching for identifying analytics and marketing beacons
+- Parameter parsing for extracting meaningful information from beacon requests
+- Support for a wide variety of marketing technologies and vendors
+
 ## Development
 
 Clone the repository:
@@ -254,6 +308,12 @@ Run in development mode with auto-restart:
 
 ```bash
 npm run dev
+```
+
+Test the server:
+
+```bash
+npm test
 ```
 
 ## License

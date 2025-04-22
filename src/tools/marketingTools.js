@@ -9,7 +9,7 @@ import { setupRequestInterception, filterMarketingRequests } from '../utils/requ
 export function registerMarketingTools(server, initBrowser) {
   // 1. General marketing tech analysis
   server.tool(
-    "analyze-general-marketing-tech",
+    "find-marketing-technologies",
     "Get a high-level overview of all marketing technologies on a webpage",
     {
       url: z.string().url().describe("The URL of the webpage to analyze"),
@@ -82,7 +82,7 @@ export function registerMarketingTools(server, initBrowser) {
 
   // 2. Specific analytics tools analysis
   server.tool(
-    "analyze-analytics-tools",
+    "analyze-analytics-platforms",
     "Deep dive into analytics platforms (GA4, UA, Adobe Analytics, etc.) on a webpage",
     {
       url: z.string().url().describe("The URL of the webpage to analyze"),
@@ -107,8 +107,9 @@ export function registerMarketingTools(server, initBrowser) {
         await page.setViewport({ width: 1280, height: 800 });
         
         // Use the improved request interception utility
+        // Only block images but not scripts - important for Adobe detection
         const requests = await setupRequestInterception(page, {
-          blockResources: ['image', 'font', 'media'] // Block heavy resources
+          blockResources: ['image'] // Don't block font/media which might contain analytics code
         });
         
         // Navigate to URL with extended timeout
@@ -117,10 +118,10 @@ export function registerMarketingTools(server, initBrowser) {
           timeout: 60000 // 60 second timeout
         });
         
-        // Additional wait time for delayed pixel fires
-        if (waitTime) {
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-        }
+        // Wait longer for analytics tools to initialize (Adobe tools load async)
+        const actualWaitTime = waitTime || 3000; // Use at least 3 seconds for analytics
+        console.error(`Waiting ${actualWaitTime}ms for analytics tools to initialize`);
+        await new Promise(resolve => setTimeout(resolve, actualWaitTime));
         
         // Detect marketing pixels with focus on analytics
         const pixelAnalysis = await detectMarketingPixels(page);
@@ -128,8 +129,9 @@ export function registerMarketingTools(server, initBrowser) {
         // Filter analytics-specific technologies and requests
         const analyticsTech = pixelAnalysis.technologies.filter(tech => 
           tech.category === 'Analytics' || 
+          tech.vendor === 'Adobe' || // Ensure we capture all Adobe tools regardless of category
           tech.name.includes('Google Analytics') || 
-          tech.name.includes('Adobe Analytics') ||
+          tech.name.includes('Analytics') ||
           tech.name.includes('Segment') ||
           tech.name.includes('Mixpanel') ||
           tech.name.includes('Clarity') ||
@@ -144,7 +146,12 @@ export function registerMarketingTools(server, initBrowser) {
           req.url.includes('mixpanel.com') || 
           req.url.includes('hotjar.com') || 
           req.url.includes('clarity.ms') ||
-          req.url.includes('omtrdc.net')
+          req.url.includes('omtrdc.net') ||
+          req.url.includes('demdex.net') ||
+          req.url.includes('2o7.net') ||
+          req.url.includes('/b/ss/') ||
+          req.url.includes('/AppMeasurement') ||
+          req.url.includes('adobedc.net')
         );
         
         // Extract IDs
@@ -155,6 +162,56 @@ export function registerMarketingTools(server, initBrowser) {
         if (pixelAnalysis.pixelIds.ua) {
           analyticsIds.ua = pixelAnalysis.pixelIds.ua;
         }
+        if (pixelAnalysis.pixelIds.adobeAnalytics) {
+          analyticsIds.adobeAnalytics = pixelAnalysis.pixelIds.adobeAnalytics;
+        }
+        if (pixelAnalysis.pixelIds.adobeReportSuite) {
+          analyticsIds.adobeReportSuite = pixelAnalysis.pixelIds.adobeReportSuite;
+        }
+        if (pixelAnalysis.pixelIds.adobeEcid) {
+          analyticsIds.adobeEcid = pixelAnalysis.pixelIds.adobeEcid;
+        }
+        
+        // Check for custom analytics implementations
+        const customAnalytics = await page.evaluate(() => {
+          // Look for common custom analytics patterns
+          const customPatterns = {
+            analyticsScripts: Array.from(document.scripts)
+              .filter(script => {
+                const src = script.src.toLowerCase();
+                const content = script.innerHTML.toLowerCase();
+                return (
+                  src.includes('/analytics/') ||
+                  src.includes('/stats/') ||
+                  src.includes('/tracking/') ||
+                  src.includes('/core.js') ||
+                  src.includes('/sync.js') ||
+                  content.includes('pageview') ||
+                  content.includes('trackEvent') ||
+                  content.includes('trackPage')
+                ) &&
+                // Exclude known implementations
+                !src.includes('google-analytics.com') &&
+                !src.includes('analytics.tiktok.com');
+              })
+              .map(script => ({
+                src: script.src,
+                inline: script.src ? false : true
+              })).slice(0, 5),
+            
+            // Data layer patterns other than GTM
+            dataObjects: [
+              'digitalData', // Adobe Data Layer
+              'utag_data', // Tealium Data Layer
+              'appEventData', // Facebook CAPI
+              'pageData', // Common custom analytics
+              'analyticsData', // Common custom analytics
+              'trackingData' // Common custom analytics
+            ].filter(varName => typeof window[varName] !== 'undefined')
+          };
+          
+          return customPatterns;
+        });
         
         // Compile analytics-specific analysis
         const analyticsAnalysis = {
@@ -163,6 +220,7 @@ export function registerMarketingTools(server, initBrowser) {
           analyticsTools: analyticsTech,
           dataLayerSample: pixelAnalysis.dataLayerSample,
           analyticsIds: analyticsIds,
+          customAnalytics: customAnalytics,
           analyticsRequests: analyticsRequests.slice(0, 10).map(req => ({
             url: req.url,
             type: req.resourceType
@@ -192,7 +250,7 @@ export function registerMarketingTools(server, initBrowser) {
 
   // 3. Advertising pixels analysis
   server.tool(
-    "analyze-advertising-pixels",
+    "detect-ad-pixels",
     "Focus on advertising platforms (Facebook, TikTok, etc.) on a webpage",
     {
       url: z.string().url().describe("The URL of the webpage to analyze"),
@@ -302,7 +360,7 @@ export function registerMarketingTools(server, initBrowser) {
 
   // 4. Tag managers analysis
   server.tool(
-    "analyze-tag-managers",
+    "identify-tag-managers",
     "Analyze tag management systems (GTM, Tealium, etc.) on a webpage",
     {
       url: z.string().url().describe("The URL of the webpage to analyze"),
@@ -412,7 +470,7 @@ export function registerMarketingTools(server, initBrowser) {
 
   // 5. Network requests analysis
   server.tool(
-    "analyze-network-requests",
+    "track-marketing-beacons",
     "Analyze network requests for tracking and marketing activities",
     {
       url: z.string().url().describe("The URL of the webpage to analyze"),
@@ -422,7 +480,13 @@ export function registerMarketingTools(server, initBrowser) {
     async ({ url, waitTime, maxRequests }) => {
       try {
         // Initialize browser
-        const browser = await initBrowser();
+        const browser = await initBrowser({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage'
+          ]
+        });
         
         // Create a new page
         const page = await browser.newPage();
@@ -431,27 +495,92 @@ export function registerMarketingTools(server, initBrowser) {
         await page.setViewport({ width: 1280, height: 800 });
         
         // Setup request interception with error handling
+        // Only block images to preserve other resources that might be analytics-related
         let requests = [];
-    try {
-      requests = await setupRequestInterception(page);
-    } catch (error) {
-      console.error(`Error setting up request interception: ${error.message}`);
-      // Continue with empty requests array rather than failing
-    }
+        try {
+          requests = await setupRequestInterception(page, {
+            blockResources: ['image'] // Don't block scripts, fonts, etc. which might have analytics
+          });
+        } catch (error) {
+          console.error(`Error setting up request interception: ${error.message}`);
+          // Continue with empty requests array rather than failing
+        }
         
         // Navigate to URL
-        await page.goto(url, { waitUntil: 'networkidle2' });
+        await page.goto(url, { 
+          waitUntil: 'networkidle2', 
+          timeout: 60000 // 60 second timeout
+        });
         
         // Additional wait time for delayed pixel fires
-        if (waitTime) {
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-        }
+        const actualWaitTime = waitTime || 3000; // Use at least 3 seconds for analytics
+        console.error(`Waiting ${actualWaitTime}ms for network requests to complete`);
+        await new Promise(resolve => setTimeout(resolve, actualWaitTime));
         
         // Filter marketing-related requests
         const marketingRequests = filterMarketingRequests(requests);
         
         // Analyze network requests
         const networkAnalysis = analyzeNetworkRequests(requests);
+        
+        // Run custom analytics beacon detection for technologies that use custom domains
+        const customBeacons = await page.evaluate(() => {
+          // Find all image pixels that might be tracking beacons
+          return Array.from(document.querySelectorAll('img[height="1"], img[width="1"], img[src*="?id="], img[src*="track"]'))
+            .map(img => ({
+              src: img.src,
+              size: `${img.width}x${img.height}`,
+              hidden: img.style.display === 'none' || img.style.visibility === 'hidden'
+            }))
+            .filter(img => img.src); // Only return images with valid src
+        });
+        
+        // Add vendor categorization for custom analytics implementations
+        const customVendors = {
+          adobe: [],
+          custom: []
+        };
+        
+        // Analyze requests for Home Depot-like custom analytics
+        requests.forEach(req => {
+          const url = req.url;
+          try {
+            const parsedUrl = new URL(url);
+            
+            // Check for Adobe Analytics patterns in custom domains
+            if (
+              (parsedUrl.pathname.includes('/b/ss/') || // Adobe Analytics collection path
+               parsedUrl.pathname.includes('/id') || // Experience Cloud ID service
+               /\/[^\/]+\/s_code\.js/.test(parsedUrl.pathname)) && // s_code.js
+              !networkAnalysis.beaconsByVendor.adobe.some(b => b.url === url)
+            ) {
+              customVendors.adobe.push({
+                url: url,
+                type: req.resourceType,
+                pattern: 'Custom Adobe implementation'
+              });
+            }
+            // Check for custom analytics patterns
+            else if (
+              (parsedUrl.pathname.includes('/analytics/') ||
+               parsedUrl.pathname.includes('/track/') ||
+               parsedUrl.pathname.includes('/stats/') ||
+               parsedUrl.pathname.includes('/sync.js') ||
+               parsedUrl.pathname.includes('/core.js') ||
+               parsedUrl.searchParams.has('event') ||
+               parsedUrl.searchParams.has('track')) &&
+              !Object.values(networkAnalysis.beaconsByVendor).flat().some(b => b.url === url)
+            ) {
+              customVendors.custom.push({
+                url: url,
+                type: req.resourceType,
+                pattern: 'Custom analytics pattern'
+              });
+            }
+          } catch (e) {
+            // Skip URL parsing errors
+          }
+        });
         
         // Compile network analysis
         const requestsAnalysis = {
@@ -465,23 +594,26 @@ export function registerMarketingTools(server, initBrowser) {
               facebook: networkAnalysis.beaconsByVendor.facebook.length,
               tiktok: networkAnalysis.beaconsByVendor.tiktok.length,
               twitter: networkAnalysis.beaconsByVendor.twitter.length,
-              adobe: networkAnalysis.beaconsByVendor.adobe.length,
+              adobe: networkAnalysis.beaconsByVendor.adobe.length + customVendors.adobe.length,
               microsoft: networkAnalysis.beaconsByVendor.microsoft.length,
               pinterest: networkAnalysis.beaconsByVendor.pinterest.length,
               linkedin: networkAnalysis.beaconsByVendor.linkedin.length,
-              other: networkAnalysis.beaconsByVendor.other.length
+              other: networkAnalysis.beaconsByVendor.other.length,
+              custom: customVendors.custom.length
             }
           },
+          trackingPixels: customBeacons.slice(0, maxRequests || 5),
           detailedTrackers: {
             google: networkAnalysis.beaconsByVendor.google.slice(0, maxRequests || 5),
             facebook: networkAnalysis.beaconsByVendor.facebook.slice(0, maxRequests || 5),
             tiktok: networkAnalysis.beaconsByVendor.tiktok.slice(0, maxRequests || 5),
             twitter: networkAnalysis.beaconsByVendor.twitter.slice(0, maxRequests || 5),
-            adobe: networkAnalysis.beaconsByVendor.adobe.slice(0, maxRequests || 5),
+            adobe: networkAnalysis.beaconsByVendor.adobe.slice(0, maxRequests || 5).concat(customVendors.adobe.slice(0, maxRequests || 5)),
             microsoft: networkAnalysis.beaconsByVendor.microsoft.slice(0, maxRequests || 5),
             pinterest: networkAnalysis.beaconsByVendor.pinterest.slice(0, maxRequests || 5),
             linkedin: networkAnalysis.beaconsByVendor.linkedin.slice(0, maxRequests || 5),
-            other: networkAnalysis.beaconsByVendor.other.slice(0, maxRequests || 5)
+            other: networkAnalysis.beaconsByVendor.other.slice(0, maxRequests || 5),
+            custom: customVendors.custom.slice(0, maxRequests || 5)
           }
         };
         
@@ -508,7 +640,7 @@ export function registerMarketingTools(server, initBrowser) {
   
   // 6. Marketing tech screenshot
   server.tool(
-    "create-marketing-tech-screenshot",
+    "highlight-marketing-tools",
     "Take a screenshot with marketing technologies visually highlighted",
     {
       url: z.string().url().describe("The URL of the webpage to screenshot"),

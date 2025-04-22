@@ -106,7 +106,7 @@ async function main() {
       process.exit(1);
     }
     
-    // Define smaller subset of tools to test first
+    // Define smaller subset of tools to test first, including the new Omnibug-enhanced tools
     const essentialToolsToTest = [
       // Core Navigation & Screenshot Tools
       { 
@@ -123,7 +123,22 @@ async function main() {
           height: 600
         }
       },
-      // General marketing tech
+      // New enhanced tools
+      {
+        name: 'analyze-all-marketing-technologies',
+        params: {
+          url: TEST_URL,
+          waitTime: 2000
+        }
+      },
+      {
+        name: 'create-enhanced-marketing-screenshot',
+        params: {
+          url: TEST_URL,
+          highlightMode: "basic"
+        }
+      },
+      // Original tools
       {
         name: 'analyze-general-marketing-tech',
         params: {
@@ -178,6 +193,14 @@ async function main() {
         params: {
           url: TEST_URL,
           highlightPixels: true
+        }
+      },
+      // Test Enhanced Marketing Screenshot with different modes
+      {
+        name: 'create-enhanced-marketing-screenshot',
+        params: {
+          url: TEST_URL,
+          highlightMode: "detailed"
         }
       },
       // Additional SEO tools
