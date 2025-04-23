@@ -14,12 +14,15 @@ import { registerMarketingTools } from "./src/tools/marketingTools.js";
 // Import enhanced marketing analysis tools (Omnibug-based)
 import { registerMarketingAnalysisTools } from "./src/tools/marketingAnalysisTool.js";
 
+// Import analytics beacon parser tools
+import { registerAnalyticsTools } from "./src/tools/analyticsTools.js";
+
 // Import SEO analysis tools
 import { registerSeoTools } from "./src/tools/seoTools.js";
 
 // Create the MCP server
 const server = new McpServer({
-  name: "puppeteer-plus",
+  name: "puppeteer-plus-martech",
   version: "1.0.0",
   capabilities: {
     resources: {},
@@ -66,7 +69,8 @@ async function cleanup() {
 // Register all tool categories
 registerCoreTools(server, initBrowser);
 registerMarketingTools(server, initBrowser);
-registerMarketingAnalysisTools(server, initBrowser); // Register the new enhanced tools
+registerMarketingAnalysisTools(server, initBrowser); // Register the enhanced marketing tools
+registerAnalyticsTools(server, initBrowser); // Register the analytics beacon parser tools
 registerSeoTools(server, initBrowser);
 
 // Handle process termination
@@ -84,12 +88,12 @@ process.on("SIGTERM", async () => {
 const transport = new StdioServerTransport();
 (async () => {
   await server.connect(transport);
-  console.error("Puppeteer Plus MCP Server started");
+  console.error("Puppeteer+ MarTech MCP Server started");
 })();
 
 // Handle stdin closing
 process.stdin.on("close", async () => {
-  console.error("Puppeteer Plus MCP Server closed");
+  console.error("Puppeteer+ MarTech MCP Server closed");
   await cleanup();
   server.close();
 });

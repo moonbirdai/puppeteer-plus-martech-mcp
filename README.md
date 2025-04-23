@@ -1,11 +1,16 @@
-# Puppeteer Plus MCP Server
+# Puppeteer+ MarTech
 
 A Model Context Protocol (MCP) server that extends Puppeteer functionality with specialized capabilities for digital marketing and SEO analysis. This server enables LLM applications like Claude to perform comprehensive marketing technology audits on websites.
+
+## Acknowledgment
+
+**This project is an experimental implementation inspired by and building upon [@modelcontextprotocol/server-puppeteer](https://www.pulsemcp.com/servers/modelcontextprotocol-puppeteer) by Anthropic.** While it shares the same foundational architecture and core capabilities, this project extends the original with specialized tools focused on digital marketing analytics and technology detection. See [ACKNOWLEDGMENTS.md](./ACKNOWLEDGMENTS.md) for more details.
 
 ## Features
 
 - **Marketing Technology Detection**: Identify analytics tools, marketing pixels, tag managers, and advertising technologies
 - **Network Beacon Analysis**: Capture and analyze marketing-related network requests
+- **Advanced Analytics Parsing**: Parse both traditional Adobe Analytics and Experience Platform Web SDK (Alloy) beacons with XDM schemas
 - **SEO Metadata Analysis**: Evaluate page metadata, structured data, and SEO best practices
 - **Visual Debugging**: Generate screenshots with marketing technologies highlighted
 - **Granular Analysis Tools**: Specialized tools for specific aspects of digital marketing and SEO
@@ -18,7 +23,10 @@ A Model Context Protocol (MCP) server that extends Puppeteer functionality with 
 - Google Tag Manager
 - Adobe Analytics
 - Adobe Launch/DTM
-- Adobe Experience Platform
+- Adobe Experience Platform Web SDK (Alloy)
+- Adobe Experience Edge
+- Adobe Experience Cloud ID Service
+- Adobe Target
 - Adobe Audience Manager
 - Segment
 - Hotjar
@@ -177,6 +185,21 @@ Comprehensive network request analysis, including:
 - Detailed tracking requests for each vendor category
 - Request timing and patterns
 
+#### parse-analytics-beacons
+Capture and parse both traditional Adobe Analytics and Adobe Experience Platform Web SDK beacons.
+
+**Parameters:**
+- `url` (string, required): The URL of the webpage to analyze
+- `waitTime` (number, optional): Time to wait for beacons to fire (milliseconds)
+- `simulateClick` (string, optional): Optional CSS selector to click for interaction beacons
+
+**Returns:**
+Detailed parsing of analytics beacons, including:
+- Complete breakdown of Adobe Analytics variables (props, eVars, events, etc.)
+- Parsed XDM schema data for Adobe Experience Platform Web SDK
+- Both page load and interaction beacons (if simulateClick is provided)
+- Categorized data by beacon type and provider
+
 #### highlight-marketing-tools
 Takes a screenshot with marketing technologies visually highlighted.
 
@@ -248,7 +271,7 @@ Structured data analysis, including:
 ## Installation
 
 ```bash
-npm install @modelcontextprotocol/server-puppeteer-plus
+npm install puppeteer-plus-martech
 ```
 
 ## Usage
@@ -256,7 +279,7 @@ npm install @modelcontextprotocol/server-puppeteer-plus
 ### As an MCP Server
 
 ```bash
-npx @modelcontextprotocol/server-puppeteer-plus
+npx puppeteer-plus-martech
 ```
 
 ### In Claude Desktop
@@ -266,11 +289,11 @@ Add this to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "puppeteer-plus": {
+    "puppeteer-plus-martech": {
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-puppeteer-plus"
+        "puppeteer-plus-martech"
       ]
     }
   }
@@ -293,8 +316,8 @@ This server incorporates enhanced detection capabilities inspired by the [Omnibu
 Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/puppeteer-plus.git
-cd puppeteer-plus
+git clone https://github.com/MBadkins/puppeteer-plus-martech.git
+cd puppeteer-plus-martech
 npm install
 ```
 

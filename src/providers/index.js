@@ -8,6 +8,7 @@ import registry from './ProviderRegistry.js';
 import GoogleAnalytics4Provider from './platforms/GoogleAnalytics4.js';
 import GoogleAnalyticsProvider from './platforms/GoogleAnalytics.js';
 import AdobeAnalyticsProvider from './platforms/AdobeAnalytics.js';
+import AdobeWebSdkProvider from './platforms/AdobeWebSdk.js';
 import FacebookPixelProvider from './platforms/FacebookPixel.js';
 import GoogleTagManagerProvider from './platforms/GoogleTagManager.js';
 import AdobeLaunchProvider from './platforms/AdobeLaunch.js';
@@ -23,6 +24,7 @@ function initializeProviders() {
     registry.addProvider(new GoogleAnalytics4Provider());
     registry.addProvider(new GoogleAnalyticsProvider());
     registry.addProvider(new AdobeAnalyticsProvider());
+    registry.addProvider(new AdobeWebSdkProvider());
     registry.addProvider(new FacebookPixelProvider());
     registry.addProvider(new GoogleTagManagerProvider());
     registry.addProvider(new AdobeLaunchProvider());

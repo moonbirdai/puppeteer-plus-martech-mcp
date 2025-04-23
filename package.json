@@ -1,14 +1,18 @@
 {
-  "name": "@modelcontextprotocol/server-puppeteer-plus",
+  "name": "puppeteer-plus-martech",
   "version": "1.0.0",
-  "description": "Enhanced Puppeteer MCP server with digital marketing analytics capabilities",
+  "description": "Puppeteer+ MarTech - Enhanced Puppeteer MCP server with specialized digital marketing analytics capabilities. This builds upon the official @modelcontextprotocol/server-puppeteer with tools for analyzing marketing technologies, analytics platforms, tag managers, and SEO.",
   "license": "MIT",
-  "author": "Your Name",
-  "homepage": "https://modelcontextprotocol.io",
-  "bugs": "https://github.com/yourusername/puppeteer-plus/issues",
+  "author": "Ciara Adkins",
+  "homepage": "https://github.com/MBadkins/puppeteer-plus-martech",
+  "bugs": "https://github.com/MBadkins/puppeteer-plus-martech/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MBadkins/puppeteer-plus-martech.git"
+  },
   "type": "module",
   "bin": {
-    "mcp-server-puppeteer-plus": "index.js"
+    "puppeteer-plus-martech": "index.js"
   },
   "files": [
     "index.js",
@@ -16,16 +20,21 @@
   ],
   "scripts": {
     "start": "node index.js",
-    "test": "node test-local.js",
+    "test": "node test-local-fixed.js",
     "dev": "nodemon index.js"
   },
   "keywords": [
     "mcp",
     "puppeteer",
+    "martech",
     "analytics",
     "seo",
     "marketing",
-    "pixels"
+    "pixels",
+    "adobe",
+    "google",
+    "facebook",
+    "tiktok"
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.10.1",

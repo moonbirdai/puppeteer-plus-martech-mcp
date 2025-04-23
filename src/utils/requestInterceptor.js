@@ -15,6 +15,7 @@ const INTERCEPTION_SETUP = Symbol('request-interception-setup');
 async function setupRequestInterception(page, options = {}) {
   const requests = [];
   const blockResources = options.blockResources || [];
+  const captureBody = options.captureBody || false;
   
   // Check if this page already has interception set up
   if (page[INTERCEPTION_SETUP]) {
@@ -49,14 +50,39 @@ async function setupRequestInterception(page, options = {}) {
           return;
         }
         
-        // Store request data for analysis
-        requests.push({
+        // Create request object for tracking
+        const requestObj = {
           url: request.url(),
           method: request.method(),
           resourceType: request.resourceType(),
           headers: request.headers(),
-          time: Date.now()
-        });
+          time: Date.now(),
+          timestamp: new Date().toISOString()
+        };
+        
+        // Capture POST data if enabled and the request has a body
+        if (captureBody && request.method() === 'POST') {
+          try {
+            const postData = request.postData();
+            if (postData) {
+              requestObj.postData = postData;
+              
+              // Try to parse JSON data for easier analysis
+              if (request.headers()['content-type']?.includes('application/json')) {
+                try {
+                  requestObj.postDataObj = JSON.parse(postData);
+                } catch (jsonError) {
+                  // Failed to parse as JSON, store as is
+                }
+              }
+            }
+          } catch (postError) {
+            // Failed to get post data, continue anyway
+          }
+        }
+        
+        // Add to requests array
+        requests.push(requestObj);
         
         // Continue the request if not already handled
         if (!request.response() && !request.redirectChain().length) {
