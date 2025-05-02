@@ -1,6 +1,6 @@
 {
   "name": "puppeteer-plus-martech",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Puppeteer+ MarTech - Enhanced Puppeteer MCP server with specialized digital marketing analytics capabilities. This builds upon the official @modelcontextprotocol/server-puppeteer with tools for analyzing marketing technologies, analytics platforms, tag managers, and SEO.",
   "license": "MIT",
   "author": "Ciara Adkins",
