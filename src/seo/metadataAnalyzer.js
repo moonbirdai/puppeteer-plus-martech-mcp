@@ -156,7 +156,111 @@ function analyzeUrl(url) {
   }
 }
 
+/**
+ * Analyzes images on the page for alt text and accessibility
+ * @param {Page} page - Puppeteer page object
+ * @returns {Object} Results of the image alt text analysis
+ */
+async function analyzeImageAltText(page) {
+  return await page.evaluate(() => {
+    const images = document.querySelectorAll('img');
+    const imageData = [];
+    
+    for (const img of images) {
+      const src = img.getAttribute('src') || '';
+      const alt = img.getAttribute('alt');
+      const width = img.getAttribute('width') || img.naturalWidth || 0;
+      const height = img.getAttribute('height') || img.naturalHeight || 0;
+      const isDecorative = alt === '';
+      const hasValidAlt = alt !== null && alt !== undefined;
+      
+      // Try to get contextual information
+      let parentElement = img.parentElement;
+      let parentTag = parentElement ? parentElement.tagName.toLowerCase() : '';
+      let closestFigure = img.closest('figure');
+      let figcaption = closestFigure ? closestFigure.querySelector('figcaption') : null;
+      let figcaptionText = figcaption ? figcaption.textContent.trim() : '';
+      
+      // Check if image is in a link
+      const isInLink = parentTag === 'a';
+      const linkUrl = isInLink ? parentElement.getAttribute('href') : null;
+      
+      // Try to derive filename if possible
+      let filename = '';
+      try {
+        if (src) {
+          const urlObj = new URL(src, window.location.href);
+          const pathParts = urlObj.pathname.split('/');
+          filename = pathParts[pathParts.length - 1];
+        }
+      } catch (e) {
+        // If URL parsing fails, try a basic extraction
+        const srcParts = src.split('/');
+        filename = srcParts[srcParts.length - 1];
+      }
+      
+      imageData.push({
+        src: src,
+        alt: alt,
+        hasAlt: hasValidAlt,
+        isDecorative: isDecorative,
+        isEmpty: alt === '',
+        dimensions: { width, height },
+        filename: filename,
+        isInLink: isInLink,
+        linkUrl: linkUrl,
+        figcaptionText: figcaptionText,
+        parentTag: parentTag,
+        issues: getIssues(alt, isDecorative, width, height, filename, isInLink)
+      });
+    }
+    
+    // Helper function to determine issues with alt text
+    function getIssues(alt, isDecorative, width, height, filename, isInLink) {
+      const issues = [];
+      
+      if (alt === null || alt === undefined) {
+        issues.push('Missing alt attribute');
+      } else if (alt === '' && !isDecorative) {
+        issues.push('Empty alt text on non-decorative image');
+      } else if (alt.length > 125) {
+        issues.push('Alt text exceeds recommended length (125 characters)');
+      } else if (alt.toLowerCase().includes('image of') || alt.toLowerCase().includes('picture of')) {
+        issues.push('Alt text contains redundant phrases like "image of" or "picture of"');
+      } else if (alt === filename) {
+        issues.push('Alt text is same as filename');
+      } else if (isInLink && alt === '') {
+        issues.push('Image in a link has empty alt text (should describe link destination)');
+      }
+      
+      if (width < 1 || height < 1) {
+        issues.push('Image has zero or unspecified dimensions');
+      }
+      
+      return issues;
+    }
+    
+    // Create a summary
+    const totalImages = imageData.length;
+    const imagesWithAlt = imageData.filter(img => img.hasAlt).length;
+    const imagesWithIssues = imageData.filter(img => img.issues.length > 0).length;
+    const decorativeImages = imageData.filter(img => img.isDecorative).length;
+    const missingAltImages = imageData.filter(img => img.alt === null || img.alt === undefined).length;
+    
+    return {
+      totalImages,
+      imagesWithAlt,
+      imagesWithIssues,
+      decorativeImages,
+      missingAltImages,
+      complianceRate: totalImages > 0 ? ((imagesWithAlt - imagesWithIssues) / totalImages) * 100 : 100,
+      images: imageData
+    };
+  });
+}
+
 export {
   analyzeSeoMetadata,
-  analyzeUrl
+  analyzeUrl,
+  analyzeImageAltText
 };

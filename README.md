@@ -268,6 +268,22 @@ Structured data analysis, including:
 - Schema.org types detected
 - Structured data evaluations with recommendations
 
+#### audit-image-alt-text
+Audit image alt text on a webpage for accessibility and SEO compliance.
+
+**Parameters:**
+- `url` (string, required): The URL of the webpage to analyze
+
+**Returns:**
+Comprehensive image alt text analysis, including:
+- Summary of image alt text compliance
+- Total number of images detected
+- Images with/without alt text
+- Accessibility score (0-100)
+- Detailed analysis of each image's alt text
+- Specific issues for each image (missing alt, empty alt, etc.)
+- Recommendations for improving accessibility and SEO
+
 ## Installation
 
 ```bash

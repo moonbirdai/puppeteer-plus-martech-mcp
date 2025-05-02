@@ -2,7 +2,7 @@
  * SEO analysis tools
  */
 import { z } from "zod";
-import { analyzeSeoMetadata, analyzeUrl } from '../seo/metadataAnalyzer.js';
+import { analyzeSeoMetadata, analyzeUrl, analyzeImageAltText } from '../seo/metadataAnalyzer.js';
 
 export function registerSeoTools(server, initBrowser) {
   // 1. Comprehensive SEO analysis
@@ -417,4 +417,124 @@ export function registerSeoTools(server, initBrowser) {
       }
     }
   );
+
+  // 5. Image Alt Text Analysis
+  server.tool(
+    "audit-image-alt-text",
+    "Audit image alt text on a webpage for accessibility and SEO compliance",
+    {
+      url: z.string().url().describe("The URL of the webpage to analyze")
+    },
+    async ({ url }) => {
+      try {
+        // Initialize browser with optimization options
+        const browser = await initBrowser({
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage'
+          ]
+        });
+        
+        // Create a new page
+        const page = await browser.newPage();
+        
+        // Navigate to the URL with extended timeout
+        await page.goto(url, { 
+          waitUntil: 'networkidle2', // Wait until network is idle for better image loading
+          timeout: 60000 // 60 second timeout
+        });
+        
+        // Give extra time for lazy-loaded images to appear
+        await page.evaluate(() => {
+          window.scrollTo(0, document.body.scrollHeight);
+          return new Promise(resolve => {
+            setTimeout(resolve, 2000); // 2 second delay for lazy loading
+          });
+        });
+        
+        // Scroll back to top
+        await page.evaluate(() => {
+          window.scrollTo(0, 0);
+        });
+        
+        // Analyze image alt text
+        const altTextAnalysis = await analyzeImageAltText(page);
+        
+        // Take a screenshot for reference
+        const screenshotBuffer = await page.screenshot({ 
+          fullPage: false, 
+          type: 'jpeg',
+          quality: 60
+        });
+        const screenshotBase64 = screenshotBuffer.toString('base64');
+        
+        // Close the page
+        await page.close();
+        
+        // Create a summary of findings
+        const { totalImages, imagesWithAlt, imagesWithIssues, decorativeImages, missingAltImages, complianceRate } = altTextAnalysis;
+        
+        // Sort images by severity of issues
+        altTextAnalysis.images.sort((a, b) => b.issues.length - a.issues.length);
+        
+        // Create accessibility score (0-100)
+        const accessibilityScore = Math.round(complianceRate);
+        
+        // Create a human-readable report
+        const report = {
+          url,
+          scanTime: new Date().toISOString(),
+          summary: {
+            totalImages,
+            imagesWithAlt,
+            imagesWithIssues,
+            decorativeImages,
+            missingAltImages,
+            complianceRate: Math.round(complianceRate * 100) / 100, // Round to 2 decimal places
+            accessibilityScore
+          },
+          recommendation: getRecommendation(accessibilityScore),
+          imageDetails: altTextAnalysis.images.map(img => ({
+            src: img.src,
+            alt: img.alt,
+            hasAlt: img.hasAlt,
+            isDecorative: img.isDecorative,
+            isInLink: img.isInLink,
+            linkUrl: img.linkUrl,
+            figcaptionText: img.figcaptionText,
+            issues: img.issues
+          }))
+        };
+        
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify(report, null, 2)
+          }]
+        };
+      } catch (error) {
+        return {
+          content: [{
+            type: "text",
+            text: `Error analyzing image alt text: ${error.message}`
+          }],
+          isError: true
+        };
+      }
+    }
+  );
+}
+
+// Helper function to generate recommendations based on score
+function getRecommendation(score) {
+  if (score >= 90) {
+    return "Excellent! Your page has high-quality alt text that supports accessibility and SEO.";
+  } else if (score >= 70) {
+    return "Good job! Your page has decent alt text coverage, but there's room for improvement.";
+  } else if (score >= 50) {
+    return "Fair. Your page needs considerable work on image alt text to improve accessibility and SEO.";
+  } else {
+    return "Poor. Your page requires immediate attention to image alt text for basic accessibility compliance.";
+  }
 }
