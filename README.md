@@ -2,6 +2,38 @@
 
 A Model Context Protocol (MCP) server that extends Puppeteer functionality with specialized capabilities for digital marketing and SEO analysis. This server enables LLM applications like Claude to perform comprehensive marketing technology audits on websites.
 
+## Installation & Usage
+
+### Quick Installation
+
+```bash
+npm install puppeteer-plus-martech
+```
+
+### Claude Desktop Integration
+
+Add this to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "puppeteer-plus-martech": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "puppeteer-plus-martech"
+      ]
+    }
+  }
+}
+```
+
+### Running as an MCP Server
+
+```bash
+npx puppeteer-plus-martech
+```
+
 ## Acknowledgment
 
 **This project is an experimental implementation inspired by and building upon [@modelcontextprotocol/server-puppeteer](https://www.pulsemcp.com/servers/modelcontextprotocol-puppeteer) by Anthropic.** While it shares the same foundational architecture and core capabilities, this project extends the original with specialized tools focused on digital marketing analytics and technology detection. See [ACKNOWLEDGMENTS.md](./ACKNOWLEDGMENTS.md) for more details.
@@ -284,36 +316,7 @@ Comprehensive image alt text analysis, including:
 - Specific issues for each image (missing alt, empty alt, etc.)
 - Recommendations for improving accessibility and SEO
 
-## Installation
 
-```bash
-npm install puppeteer-plus-martech
-```
-
-## Usage
-
-### As an MCP Server
-
-```bash
-npx puppeteer-plus-martech
-```
-
-### In Claude Desktop
-
-Add this to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "puppeteer-plus-martech": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "puppeteer-plus-martech"
-      ]
-    }
-  }
-}
 ```
 
 ## Technology Details
