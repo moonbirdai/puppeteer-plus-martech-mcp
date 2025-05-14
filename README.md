@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/moonbirdai-puppeteer-plus-martech-mcp-badge.png)](https://mseep.ai/app/moonbirdai-puppeteer-plus-martech-mcp)
+
 # Puppeteer+ MarTech
 
 A Model Context Protocol (MCP) server that extends Puppeteer functionality with specialized capabilities for digital marketing and SEO analysis. This server enables LLM applications like Claude to perform comprehensive marketing technology audits on websites.
